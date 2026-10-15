@@ -1,6 +1,7 @@
 package me.magnum.melonds.ui.cheats.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -12,10 +13,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -30,6 +37,7 @@ import me.magnum.melonds.ui.cheats.model.CheatsScreenUiState
 import me.magnum.melonds.ui.cheats.ui.item.FolderItem
 import me.magnum.melonds.ui.common.component.dialog.TextInputDialog
 import me.magnum.melonds.ui.common.component.dialog.rememberTextInputDialogState
+import me.magnum.melonds.ui.common.melonOutlinedTextFieldColors
 
 @Composable
 fun FolderListScreen(
@@ -61,30 +69,53 @@ private fun List(
 ) {
     val newFolderDialogState = rememberTextInputDialogState()
     val resources = LocalResources.current
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    val filteredFolders = remember(folders, searchQuery) {
+        folders.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    }
 
     Box(modifier) {
-        if (folders.isEmpty()) {
-            Text(
-                modifier = Modifier.padding(contentPadding).padding(24.dp).align(Alignment.Center),
-                text = stringResource(R.string.no_cheats_found),
-                textAlign = TextAlign.Center,
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().consumeWindowInsets(contentPadding),
-                contentPadding = PaddingValues(
-                    start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(
                     top = contentPadding.calculateTopPadding(),
-                    end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp + 56.dp + 16.dp, // Take FAB into consideration
-                ),
-            ) {
-                items(folders) {
-                    FolderItem(
-                        modifier = Modifier.fillMaxWidth(),
-                        folder = it,
-                        onClick = { onFolderClick(it) },
+                    bottom = contentPadding.calculateBottomPadding(),
+                )
+                .consumeWindowInsets(contentPadding),
+        ) {
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                singleLine = true,
+                label = { Text(stringResource(R.string.hint_search_cheat_folders)) },
+                colors = melonOutlinedTextFieldColors(),
+            )
+
+            if (filteredFolders.isEmpty()) {
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    Text(
+                        modifier = Modifier.padding(24.dp).align(Alignment.Center),
+                        text = stringResource(R.string.no_cheats_found),
+                        textAlign = TextAlign.Center,
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                        end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+                        bottom = 16.dp + 56.dp + 16.dp, // Take FAB into consideration
+                    ),
+                ) {
+                    items(filteredFolders) {
+                        FolderItem(
+                            modifier = Modifier.fillMaxWidth(),
+                            folder = it,
+                            onClick = { onFolderClick(it) },
+                        )
+                    }
                 }
             }
         }
