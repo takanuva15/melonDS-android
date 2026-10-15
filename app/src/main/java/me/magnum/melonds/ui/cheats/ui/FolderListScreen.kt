@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -70,8 +72,19 @@ private fun List(
     val newFolderDialogState = rememberTextInputDialogState()
     val resources = LocalResources.current
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    val filteredFolders = remember(folders, searchQuery) {
-        folders.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    val searchResults = remember(folders, searchQuery) {
+        folders.mapNotNull { folder ->
+            val matchingCheats = if (searchQuery.isBlank()) {
+                emptyList()
+            } else {
+                folder.cheats.filter { it.name.contains(searchQuery, ignoreCase = true) }
+            }
+            if (searchQuery.isBlank() || folder.name.contains(searchQuery, ignoreCase = true) || matchingCheats.isNotEmpty()) {
+                folder to matchingCheats
+            } else {
+                null
+            }
+        }
     }
 
     Box(modifier) {
@@ -88,11 +101,11 @@ private fun List(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 singleLine = true,
-                label = { Text(stringResource(R.string.hint_search_cheat_folders)) },
+                label = { Text(stringResource(R.string.hint_search_cheats_and_folders)) },
                 colors = melonOutlinedTextFieldColors(),
             )
 
-            if (filteredFolders.isEmpty()) {
+            if (searchResults.isEmpty()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     Text(
                         modifier = Modifier.padding(24.dp).align(Alignment.Center),
@@ -102,19 +115,28 @@ private fun List(
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentPadding = PaddingValues(
                         start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
                         end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
                         bottom = 16.dp + 56.dp + 16.dp, // Take FAB into consideration
                     ),
                 ) {
-                    items(filteredFolders) {
+                    items(searchResults) { (folder, matchingCheats) ->
                         FolderItem(
                             modifier = Modifier.fillMaxWidth(),
-                            folder = it,
-                            onClick = { onFolderClick(it) },
+                            folder = folder,
+                            onClick = { onFolderClick(folder) },
                         )
+                        matchingCheats.forEach { cheat ->
+                            Text(
+                                modifier = Modifier.fillMaxWidth()
+                                    .clickable { onFolderClick(folder) }
+                                    .padding(start = 72.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                                text = cheat.name,
+                                style = MaterialTheme.typography.body2,
+                            )
+                        }
                     }
                 }
             }
