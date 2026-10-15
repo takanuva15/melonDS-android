@@ -39,6 +39,7 @@ import me.magnum.melonds.R
 import me.magnum.melonds.domain.model.CheatFolder
 import me.magnum.melonds.ui.cheats.model.CheatsScreenUiState
 import me.magnum.melonds.ui.cheats.ui.item.FolderItem
+import me.magnum.melonds.ui.cheats.ui.item.HighlightedText
 import me.magnum.melonds.ui.common.component.dialog.TextInputDialog
 import me.magnum.melonds.ui.common.component.dialog.rememberTextInputDialogState
 import me.magnum.melonds.ui.common.melonOutlinedTextFieldColors
@@ -138,14 +139,16 @@ private fun List(
                         FolderItem(
                             modifier = Modifier.fillMaxWidth(),
                             folder = folder,
+                            highlightQuery = searchQuery,
                             onClick = { onFolderClick(folder) },
                         )
                         matchingCheats.forEach { cheat ->
-                            Text(
+                            HighlightedText(
                                 modifier = Modifier.fillMaxWidth()
                                     .clickable { onFolderClick(folder) }
                                     .padding(start = 72.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                                 text = cheat.name,
+                                query = searchQuery,
                                 style = MaterialTheme.typography.body2,
                             )
                         }
