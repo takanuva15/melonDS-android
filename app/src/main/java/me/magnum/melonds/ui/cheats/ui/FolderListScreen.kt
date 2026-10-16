@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import me.magnum.melonds.R
+import me.magnum.melonds.domain.model.Cheat
 import me.magnum.melonds.domain.model.CheatFolder
 import me.magnum.melonds.ui.cheats.model.CheatsScreenUiState
 import me.magnum.melonds.ui.cheats.ui.item.FolderItem
@@ -50,6 +51,7 @@ fun FolderListScreen(
     contentPadding: PaddingValues,
     folders: CheatsScreenUiState<List<CheatFolder>>,
     onFolderClick: (CheatFolder) -> Unit,
+    onCheatClick: (CheatFolder, Cheat) -> Unit,
     onAddFolder: (String) -> Unit,
 ) {
     when (folders) {
@@ -59,6 +61,7 @@ fun FolderListScreen(
             contentPadding = contentPadding,
             folders = folders.data,
             onFolderClick = onFolderClick,
+            onCheatClick = onCheatClick,
             onAddFolder = onAddFolder,
         )
     }
@@ -70,6 +73,7 @@ private fun List(
     contentPadding: PaddingValues,
     folders: List<CheatFolder>,
     onFolderClick: (CheatFolder) -> Unit,
+    onCheatClick: (CheatFolder, Cheat) -> Unit,
     onAddFolder: (String) -> Unit,
 ) {
     val newFolderDialogState = rememberTextInputDialogState()
@@ -145,7 +149,7 @@ private fun List(
                         matchingCheats.forEach { cheat ->
                             HighlightedText(
                                 modifier = Modifier.fillMaxWidth()
-                                    .clickable { onFolderClick(folder) }
+                                    .clickable { onCheatClick(folder, cheat) }
                                     .padding(start = 72.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                                 text = cheat.name,
                                 query = searchQuery,

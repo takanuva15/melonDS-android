@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -16,6 +17,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -40,6 +42,8 @@ fun CheatListScreen(
     modifier: Modifier,
     contentPadding: PaddingValues,
     cheats: CheatsScreenUiState<List<Cheat>>,
+    targetCheatId: Long? = null,
+    targetCheatCode: String? = null,
     onCheatClick: (Cheat) -> Unit,
     onAddNewCheat: (CheatSubmissionForm) -> Unit,
     onUpdateCheat: (Cheat, CheatSubmissionForm) -> Unit,
@@ -51,6 +55,8 @@ fun CheatListScreen(
             modifier = modifier,
             contentPadding = contentPadding,
             cheats = cheats.data,
+            targetCheatId = targetCheatId,
+            targetCheatCode = targetCheatCode,
             onCheatClick = onCheatClick,
             onAddNewCheat = onAddNewCheat,
             onUpdateCheat = onUpdateCheat,
@@ -64,12 +70,31 @@ private fun List(
     modifier: Modifier,
     contentPadding: PaddingValues,
     cheats: List<Cheat>,
+    targetCheatId: Long?,
+    targetCheatCode: String?,
     onCheatClick: (Cheat) -> Unit,
     onAddNewCheat: (CheatSubmissionForm) -> Unit,
     onUpdateCheat: (Cheat, CheatSubmissionForm) -> Unit,
     onDeleteCheatClick: (Cheat) -> Unit,
 ) {
     var cheatFormDialogState by rememberSaveable(stateSaver = CheatFormDialogState.Saver) { mutableStateOf(CheatFormDialogState.Hidden) }
+    var pendingTargetCheatId by rememberSaveable(targetCheatId, targetCheatCode) { mutableStateOf(targetCheatId) }
+    var pendingTargetCheatCode by rememberSaveable(targetCheatId, targetCheatCode) { mutableStateOf(targetCheatCode) }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(cheats, pendingTargetCheatId, pendingTargetCheatCode) {
+        if (pendingTargetCheatId != null || pendingTargetCheatCode != null) {
+            val targetIndex = cheats.indexOfFirst { cheat ->
+                (pendingTargetCheatId != null && cheat.id == pendingTargetCheatId) ||
+                    (pendingTargetCheatCode != null && cheat.code == pendingTargetCheatCode)
+            }
+            if (targetIndex >= 0) {
+                listState.animateScrollToItem(targetIndex)
+            }
+            pendingTargetCheatId = null
+            pendingTargetCheatCode = null
+        }
+    }
 
     Box(modifier) {
         if (cheats.isEmpty()) {
@@ -80,6 +105,7 @@ private fun List(
             )
         } else {
             LazyColumn(
+                state = listState,
                 modifier = modifier.consumeWindowInsets(contentPadding),
                 contentPadding = PaddingValues(
                     start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),

@@ -100,7 +100,13 @@ fun CheatsScreen(
     }
     LaunchedEffect(Unit) {
         viewModel.openCheatsEvent.collect {
-            navController.navigate(CheatsNavigation.FolderCheats(it.newTitle))
+            navController.navigate(
+                CheatsNavigation.FolderCheats(
+                    folderName = it.newTitle,
+                    targetCheatId = it.targetCheatId,
+                    targetCheatCode = it.targetCheatCode,
+                )
+            )
         }
     }
     LaunchedEffect(Unit) {
@@ -180,16 +186,20 @@ fun CheatsScreen(
                     contentPadding = padding,
                     folders = folders,
                     onFolderClick = { viewModel.setSelectedFolder(it) },
+                    onCheatClick = { folder, cheat -> viewModel.setSelectedFolder(folder, cheat) },
                     onAddFolder = { viewModel.addFolder(it) },
                 )
             }
             composable<CheatsNavigation.FolderCheats> {
                 val cheats by viewModel.folderCheats.collectAsStateWithLifecycle(CheatsScreenUiState.Loading())
+                val route = it.toRoute<CheatsNavigation.FolderCheats>()
 
                 CheatListScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = padding,
                     cheats = cheats,
+                    targetCheatId = route.targetCheatId,
+                    targetCheatCode = route.targetCheatCode,
                     onCheatClick = { viewModel.toggleCheat(it) },
                     onAddNewCheat = viewModel::addNewCheat,
                     onUpdateCheat = viewModel::updateCheat,

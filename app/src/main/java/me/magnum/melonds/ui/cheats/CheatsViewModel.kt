@@ -178,9 +178,15 @@ class CheatsViewModel @Inject constructor(
         _openFoldersEvent.trySend(OpenScreenEvent(game.name))
     }
 
-    fun setSelectedFolder(folder: CheatFolder) {
+    fun setSelectedFolder(folder: CheatFolder, targetCheat: Cheat? = null) {
         savedStateHandle[KEY_SELECTED_FOLDER] = CheatFolderParcelable.fromCheatFolder(folder)
-        _openCheatsEvent.trySend(OpenScreenEvent(folder.name))
+        _openCheatsEvent.trySend(
+            OpenScreenEvent(
+                newTitle = folder.name,
+                targetCheatId = targetCheat?.id,
+                targetCheatCode = targetCheat?.code,
+            )
+        )
     }
 
     fun addFolder(folderName: String) {
