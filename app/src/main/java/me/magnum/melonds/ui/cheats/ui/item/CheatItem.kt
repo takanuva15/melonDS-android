@@ -1,5 +1,6 @@
 package me.magnum.melonds.ui.cheats.ui.item
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,8 +18,11 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
@@ -35,16 +40,20 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import me.magnum.melonds.R
 import me.magnum.melonds.domain.model.Cheat
 import me.magnum.melonds.ui.common.MelonPreviewSet
 import me.magnum.melonds.ui.common.component.text.CaptionText
 import me.magnum.melonds.ui.theme.MelonTheme
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun CheatItem(
     modifier: Modifier,
     cheat: Cheat,
+    flashOnOpen: Boolean = false,
+    onFlashComplete: () -> Unit = {},
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
@@ -54,8 +63,27 @@ fun CheatItem(
     val (mainFocusRequester, optionsFocusRequester) = remember { FocusRequester.createRefs() }
 
     val verticalPadding = if (hasDescription) 12.dp else 4.dp
+    val flashColor = MaterialTheme.colors.secondary.copy(alpha = 0.35f)
+    var flashBackground by remember { mutableStateOf(Color.Transparent) }
+
+    LaunchedEffect(flashOnOpen) {
+        if (flashOnOpen) {
+            flashBackground = flashColor
+            delay(350.milliseconds)
+            flashBackground = Color.Transparent
+            delay(300.milliseconds)
+            onFlashComplete()
+        }
+    }
+
+    val animatedBackground = animateColorAsState(
+        targetValue = flashBackground,
+        animationSpec = tween(durationMillis = 300),
+        label = "cheatSearchFlash",
+    )
     Row(
         modifier = modifier
+            .background(animatedBackground.value)
             .focusRequester(mainFocusRequester)
             .focusProperties {
                 end = optionsFocusRequester

@@ -81,6 +81,8 @@ private fun List(
     var cheatFormDialogState by rememberSaveable(stateSaver = CheatFormDialogState.Saver) { mutableStateOf(CheatFormDialogState.Hidden) }
     var pendingTargetCheatId by rememberSaveable(targetCheatId, targetCheatCode) { mutableStateOf(targetCheatId) }
     var pendingTargetCheatCode by rememberSaveable(targetCheatId, targetCheatCode) { mutableStateOf(targetCheatCode) }
+    var flashTargetCheatId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var flashTargetCheatCode by rememberSaveable { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(cheats, pendingTargetCheatId, pendingTargetCheatCode) {
@@ -98,6 +100,8 @@ private fun List(
                     val itemCenter = targetItem.offset + targetItem.size / 2f
                     listState.animateScrollBy(itemCenter - viewportCenter)
                 }
+                flashTargetCheatId = cheats[targetIndex].id
+                flashTargetCheatCode = cheats[targetIndex].code
             }
             pendingTargetCheatId = null
             pendingTargetCheatCode = null
@@ -133,6 +137,12 @@ private fun List(
                     CheatItem(
                         modifier = Modifier.fillMaxWidth(),
                         cheat = item,
+                        flashOnOpen = flashTargetCheatId?.let { item.id == it }
+                            ?: (flashTargetCheatCode != null && item.code == flashTargetCheatCode),
+                        onFlashComplete = {
+                            flashTargetCheatId = null
+                            flashTargetCheatCode = null
+                        },
                         onClick = { onCheatClick(item) },
                         onEditClick = { cheatFormDialogState = CheatFormDialogState.EditCheat(item) },
                         onDeleteClick = { onDeleteCheatClick(item) },
