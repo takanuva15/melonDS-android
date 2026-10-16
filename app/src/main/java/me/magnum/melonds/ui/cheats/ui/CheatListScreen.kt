@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.material.Divider
 import androidx.compose.material.FloatingActionButton
 import androidx.compose.material.Icon
@@ -90,6 +91,13 @@ private fun List(
             }
             if (targetIndex >= 0) {
                 listState.animateScrollToItem(targetIndex)
+                val layoutInfo = listState.layoutInfo
+                val targetItem = layoutInfo.visibleItemsInfo.firstOrNull { it.index == targetIndex }
+                if (targetItem != null) {
+                    val viewportCenter = (layoutInfo.viewportStartOffset + layoutInfo.viewportEndOffset) / 2f
+                    val itemCenter = targetItem.offset + targetItem.size / 2f
+                    listState.animateScrollBy(itemCenter - viewportCenter)
+                }
             }
             pendingTargetCheatId = null
             pendingTargetCheatCode = null
